@@ -1,0 +1,19 @@
+# secrets and private keys
+*.secret
+secret.txt
+*.pem
+id_rsa*
+id_ed25519*
+.vault_pass*
+
+# Terraform (from week 10)
+.terraform/
+*.tfstate
+*.tfstate.backup
+*.tfvars
+
+# temporary and editor files
+*.tmp
+*.swp
+.vscode/
+.DS_Store
