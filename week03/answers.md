@@ -1,6 +1,47 @@
 # Week 3 – Answers
 
-> Answers to earlier questions (Q1–Q7) still to be added.
+## Lab parameters
+
+| Parameter | Value |
+|---|---|
+| My student number NN | **TODO** |
+| Template VM ID (NN99) | **TODO** |
+| manager VM ID / IP | **TODO** / 10.0.97.16 |
+| worker1 · worker2 · worker3 VM IDs | **TODO** |
+| worker1 · worker2 · worker3 IPs | 10.0.97.26 · 10.0.97.27 · 10.0.97.28 |
+| Prefix length / gateway / DNS | /16 · 10.0.0.1 · 10.0.0.62, 10.0.0.1 |
+| Storage ID · bridge (Part 0) | **TODO** · **TODO** |
+
+## Q1
+Storage ID: **TODO**, bridge: **TODO** (look up in Proxmox: Datacenter → Storage, and node → System → Network).
+
+- A **Proxmox storage** is a configured place (local disk, LVM-thin pool, NFS share, …) where Proxmox keeps VM disks, ISO images, templates or backups; each storage has an ID and allowed content types such as "Disk image".
+- A **Linux bridge** (e.g. `vmbr0`) is a virtual network switch on the Proxmox host that connects the VMs' virtual network cards to the physical network card and thus to the school network.
+
+## Q2
+- `import-from=…noble-server-cloudimg-amd64.img` – creates a new VM disk on the storage and copies (imports) the Ubuntu cloud image into it, so the VM boots from a ready-installed Ubuntu instead of an installer ISO.
+- `--ide2 local-lvm:cloudinit` – adds a small virtual CD-ROM drive that holds the cloud-init data (user, password, SSH keys, IP config) which Proxmox generates from the Cloud-Init tab; the VM reads it on first boot.
+- `--boot order=scsi0` – tells the VM to boot only from the imported disk `scsi0` (not from the network or the cloud-init drive).
+- `qm template` – converts the VM into a read-only template; it can't be started anymore, but it can be cloned many times.
+
+## Q3
+The VM's hostname is `icode-eric-m` (workers: `icode-eric-w-1/2/3`). It comes from cloud-init: Proxmox passes the VM name as the hostname in the cloud-init data, and cloud-init sets it on first boot (`/var/lib/cloud/instance/user-data.txt` contains `hostname: icode-eric-m`).
+`sudo whoami` works without a password because cloud-init created the user `student` with the rule `student ALL=(ALL) NOPASSWD:ALL` in `/etc/sudoers.d/`, so this user can use sudo without typing a password.
+
+## Q4
+An automation key is used by programs (Ansible, scripts, cron jobs) that run without a person present, so nobody could type a passphrase – that's why it has none. The risk: the private key file itself is the only protection. Anyone who gets a copy of `~/.ssh/id_ed25519` (e.g. a hacked manager, a backup, or accidentally committing it to Git) can immediately log in to all workers – and because `student` has passwordless sudo, become root on them.
+
+## Q5
+- Typing errors: wrong IP or gateway, duplicate IP or VM ID, wrong storage/bridge name → VM not reachable or clashes with another student's VM.
+- Forgetting a step: e.g. not pasting the manager key into a worker, forgetting "Regenerate Image", or using a Linked Clone instead of Full Clone → Ansible can't connect or VMs depend on the template.
+- Inconsistency and no record: every server ends up slightly different (RAM, disk size, settings), it takes a lot of time, and nobody can repeat exactly what was done – for 50 servers this is slow and error-prone.
+
+## Q6
+Ansible **core 2.16.3** was installed (Ubuntu 24.04 package).
+The line says `config file = /home/student/icode-eric/week03/ansible.cfg` when run from the week03 folder, because Ansible looks for `ansible.cfg` in the current directory first (before `~/.ansible.cfg` and `/etc/ansible/ansible.cfg`). Before our project `ansible.cfg` existed it showed `/etc/ansible/ansible.cfg` or `None`.
+
+## Q7
+The manager doesn't use SSH to reach itself. In the inventory it has `ansible_connection=local`, so Ansible runs the module directly on the local machine as the current user (`ESTABLISH LOCAL CONNECTION FOR USER: student` in `-vvv` output). No SSH login happens, so no key in `authorized_keys` is needed.
 
 ## Q8
 Without `--become`, `whoami` prints `student` (the SSH user from `ansible.cfg`). With `--become` it prints `root`: Ansible ran the command through `sudo`, so it executed with root privileges.
