@@ -38,7 +38,7 @@ An automation key is used by programs (Ansible, scripts, cron jobs) that run wit
 
 ## Q6
 Ansible **core 2.16.3** was installed (Ubuntu 24.04 package).
-The line says `config file = /home/student/icode-eric/week03/ansible.cfg` when run from the week03 folder, because Ansible looks for `ansible.cfg` in the current directory first (before `~/.ansible.cfg` and `/etc/ansible/ansible.cfg`). Before our project `ansible.cfg` existed it showed `/etc/ansible/ansible.cfg` or `None`.
+The line says `config file = /home/student/icode-eric/week03/ansible.cfg` when run from the week03 folder, because Ansible looks for `ansible.cfg` in the current directory first (before `~/.ansible.cfg` and `/etc/ansible/ansible.cfg`). Outside the project folder it shows `config file = None`, because the Ubuntu package ships no `/etc/ansible/ansible.cfg`.
 
 ## Q7
 The manager doesn't use SSH to reach itself. In the inventory it has `ansible_connection=local`, so Ansible runs the module directly on the local machine as the current user (`ESTABLISH LOCAL CONNECTION FOR USER: student` in `-vvv` output). No SSH login happens, so no key in `authorized_keys` is needed.
