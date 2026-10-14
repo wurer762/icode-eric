@@ -1,4 +1,4 @@
-# ICODE
+# ICODE - edited on GitHub
 Eric - Class: ICODE-CLASS
 
 This repository holds my ICODE lab work (Git, Ansible, Terraform...).
