@@ -1,1 +1,9 @@
-# icode-eric"Git records every change." 
+# ICODE
+Eric - Class: ICODE-CLASS
+
+This repository holds my ICODE lab work (Git, Ansible, Terraform...).
+
+Git records every change.
+
+## AI use
+- Claude (AI): helped draft week02/answers.md and the tools grid
