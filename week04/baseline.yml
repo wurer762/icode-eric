@@ -1,0 +1,115 @@
+---
+- name: Baseline configuration for all lab servers
+  hosts: workers
+  become: true
+
+  tasks:
+    # --- B1: packages -----------------------------------------
+    - name: Install base packages
+      ansible.builtin.apt:
+        name:
+          - htop
+          - curl
+          - vim
+          - git
+          - qemu-guest-agent
+        state: present
+        update_cache: true
+        cache_valid_time: 3600
+
+    - name: Start the QEMU guest agent now and at boot
+      ansible.builtin.service:
+        name: qemu-guest-agent
+        state: started
+        enabled: true
+
+    # --- B2: time zone and login message ----------------------
+    - name: Set the time zone
+      community.general.timezone:
+        name: Europe/Luxembourg
+
+    - name: Write the message of the day
+      ansible.builtin.copy:
+        dest: /etc/motd
+        content: |
+          This server is managed by Ansible.
+          Manual changes will be overwritten.
+        owner: root
+        group: root
+        mode: "0644"
+
+    # --- B3: admin group and users ----------------------------
+    - name: Create the admins group
+      ansible.builtin.group:
+        name: admins
+        state: present
+
+    - name: Create user alice
+      ansible.builtin.user:
+        name: alice
+        comment: Alice Admin
+        groups: admins
+        append: true
+        shell: /bin/bash
+        state: present
+
+    - name: Authorize alice's SSH key
+      ansible.posix.authorized_key:
+        user: alice
+        key: "{{ lookup('ansible.builtin.file', 'files/alice.pub') }}"
+        state: present
+
+    - name: Create user bob
+      ansible.builtin.user:
+        name: bob
+        comment: Bob Admin
+        groups: admins
+        append: true
+        shell: /bin/bash
+        state: present
+
+    - name: Authorize bob's SSH key
+      ansible.posix.authorized_key:
+        user: bob
+        key: "{{ lookup('ansible.builtin.file', 'files/bob.pub') }}"
+        state: present
+
+    # --- B4: sudo rights --------------------------------------
+    - name: Allow the admins group to use sudo without password
+      ansible.builtin.copy:
+        dest: /etc/sudoers.d/admins
+        content: "%admins ALL=(ALL) NOPASSWD:ALL\n"
+        owner: root
+        group: root
+        mode: "0440"
+        validate: /usr/sbin/visudo -cf %s
+
+    # --- B5: SSH hardening ------------------------------------
+    - name: Forbid SSH login as root
+      ansible.builtin.lineinfile:
+        path: /etc/ssh/sshd_config
+        regexp: '^#?PermitRootLogin'
+        line: PermitRootLogin no
+        validate: /usr/sbin/sshd -t -f %s
+      notify: Restart SSH
+
+    # --- Challenge --------------------------------------------
+    - name: Make sure telnet is absent
+      ansible.builtin.apt:
+        name: telnet
+        state: absent
+
+    - name: Create the shared directory /opt/icode
+      ansible.builtin.file:
+        path: /opt/icode
+        state: directory
+        owner: root
+        group: admins
+        mode: "2775"
+
+  handlers:
+    # Runs only when a task that notifies it reports "changed"
+    - name: Restart SSH
+      ansible.builtin.service:
+        name: ssh
+        state: restarted
