@@ -1,0 +1,57 @@
+---
+- name: Data-driven baseline
+  hosts: workers
+  become: true
+
+  tasks:
+    - name: Install common and group-specific packages
+      ansible.builtin.apt:
+        name: "{{ common_packages + (extra_packages | default([])) }}"
+        state: present
+        update_cache: true
+        cache_valid_time: 3600
+
+    - name: Set the time zone (Ubuntu only)
+      community.general.timezone:
+        name: "{{ timezone }}"
+      when: ansible_distribution == "Ubuntu"
+
+    - name: Show what Ansible knows about this host
+      ansible.builtin.debug:
+        msg: >-
+          {{ inventory_hostname }} is a {{ server_role }}
+          in groups {{ group_names | join(', ') }},
+          runs {{ ansible_distribution }} {{ ansible_distribution_version }}
+          with {{ ansible_memtotal_mb }} MB RAM
+
+    - name: Warn about hosts with little memory
+      ansible.builtin.debug:
+        msg: "Only {{ ansible_memtotal_mb }} MB RAM on {{ inventory_hostname }}"
+      when: ansible_memtotal_mb < 1800
+
+    - name: Write a message of the day built from facts
+      ansible.builtin.copy:
+        dest: /etc/motd
+        content: |
+          {{ inventory_hostname }} ({{ ansible_default_ipv4.address }}) - {{ server_role }}
+          Managed by Ansible for {{ motd_owner }}.
+        mode: "0644"
+
+    - name: Read the kernel version
+      ansible.builtin.command: uname -r
+      register: kernel
+      changed_when: false
+
+    - name: Show the registered result
+      ansible.builtin.debug:
+        msg: "Kernel {{ kernel.stdout }} (return code {{ kernel.rc }})"
+
+    - name: Check whether a reboot is pending
+      ansible.builtin.stat:
+        path: /var/run/reboot-required
+      register: reboot_flag
+
+    - name: Report hosts that need a reboot
+      ansible.builtin.debug:
+        msg: "{{ inventory_hostname }} needs a reboot"
+      when: reboot_flag.stat.exists

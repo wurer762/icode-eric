@@ -1,0 +1,4 @@
+---
+server_role: load balancer
+extra_packages:
+  - haproxy

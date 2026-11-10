@@ -1,0 +1,6 @@
+---
+server_role: web server
+extra_packages:
+  - nginx
+
+motd_owner: "the web team"
