@@ -1,0 +1,10 @@
+---
+- name: Render the start page into /tmp to check it
+  hosts: web
+
+  tasks:
+    - name: Render the template
+      ansible.builtin.template:
+        src: templates/index.html.j2
+        dest: /tmp/test.html
+        mode: "0644"

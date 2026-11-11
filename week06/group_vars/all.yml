@@ -1,0 +1,22 @@
+---
+timezone: Europe/Luxembourg
+
+common_packages:
+  - htop
+  - curl
+  - vim
+  - git
+  - qemu-guest-agent
+
+admins:
+  - name: alice
+    comment: Alice Admin
+  - name: bob
+    comment: Bob Admin
+  - name: carla
+    comment: Carla Admin
+  - name: dave
+    comment: Dave (left)
+    state: absent
+
+motd_owner: "the ICODE class"

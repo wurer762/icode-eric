@@ -1,0 +1,10 @@
+---
+server_role: load balancer
+extra_packages:
+  - haproxy
+
+lb_port: 80
+
+haproxy_stats_port: 8404
+haproxy_stats_user: admin
+haproxy_stats_password: icode2026

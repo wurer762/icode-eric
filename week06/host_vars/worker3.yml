@@ -1,0 +1,4 @@
+---
+# worker3 is also the load balancer: HAProxy already uses port 80
+web_port: 8080
+page_color: "#F5A623"

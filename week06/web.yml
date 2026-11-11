@@ -1,0 +1,88 @@
+---
+- name: Web servers
+  hosts: web
+  become: true
+
+  tasks:
+    - name: Install nginx
+      ansible.builtin.apt:
+        name: nginx
+        state: present
+        update_cache: true
+        cache_valid_time: 3600
+
+    - name: Create the web root
+      ansible.builtin.file:
+        path: /var/www/icode
+        state: directory
+        mode: "0755"
+
+    - name: Deploy the start page
+      ansible.builtin.template:
+        src: templates/index.html.j2
+        dest: /var/www/icode/index.html
+        mode: "0644"
+
+    - name: Deploy the nginx site configuration
+      ansible.builtin.template:
+        src: templates/icode-site.conf.j2
+        dest: /etc/nginx/sites-available/icode
+        mode: "0644"
+      notify: Reload nginx
+
+    - name: Enable the icode site
+      ansible.builtin.file:
+        src: /etc/nginx/sites-available/icode
+        dest: /etc/nginx/sites-enabled/icode
+        state: link
+      notify: Reload nginx
+
+    - name: Disable the default site
+      ansible.builtin.file:
+        path: /etc/nginx/sites-enabled/default
+        state: absent
+      notify: Reload nginx
+
+    - name: Make sure nginx is running and enabled
+      ansible.builtin.service:
+        name: nginx
+        state: started
+        enabled: true
+
+  handlers:
+    - name: Reload nginx
+      ansible.builtin.service:
+        name: nginx
+        state: reloaded
+
+- name: Load balancer
+  hosts: lb
+  become: true
+
+  tasks:
+    - name: Install HAProxy
+      ansible.builtin.apt:
+        name: haproxy
+        state: present
+        update_cache: true
+        cache_valid_time: 3600
+
+    - name: Deploy the HAProxy configuration
+      ansible.builtin.template:
+        src: templates/haproxy.cfg.j2
+        dest: /etc/haproxy/haproxy.cfg
+        mode: "0644"
+        validate: haproxy -c -f %s
+      notify: Reload HAProxy
+
+    - name: Make sure HAProxy is running and enabled
+      ansible.builtin.service:
+        name: haproxy
+        state: started
+        enabled: true
+
+  handlers:
+    - name: Reload HAProxy
+      ansible.builtin.service:
+        name: haproxy
+        state: reloaded

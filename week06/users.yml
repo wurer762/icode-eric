@@ -1,0 +1,29 @@
+---
+- name: Manage admin users from data
+  hosts: workers
+  become: true
+
+  tasks:
+    - name: Create the admins group
+      ansible.builtin.group:
+        name: admins
+        state: present
+
+    - name: Manage admin accounts
+      ansible.builtin.user:
+        name: "{{ item.name }}"
+        comment: "{{ item.comment }}"
+        groups: admins
+        append: true
+        shell: /bin/bash
+        state: "{{ item.state | default('present') }}"
+        remove: "{{ item.state | default('present') == 'absent' }}"
+      loop: "{{ admins }}"
+
+    - name: Authorize SSH keys of current admins
+      ansible.posix.authorized_key:
+        user: "{{ item.name }}"
+        key: "{{ lookup('ansible.builtin.file', 'files/' + item.name + '.pub') }}"
+        state: present
+      loop: "{{ admins }}"
+      when: item.state | default('present') == 'present'
