@@ -1,0 +1,13 @@
+---
+argument_specs:
+  main:
+    short_description: Install nginx and deploy the icode start page
+    options:
+      web_port:
+        type: int
+        required: true
+        description: TCP port nginx listens on.
+      page_color:
+        type: str
+        default: "#0094C3"
+        description: Background colour of the start page.

@@ -1,0 +1,22 @@
+---
+# tasks file for loadbalancer
+- name: Install HAProxy
+  ansible.builtin.apt:
+    name: haproxy
+    state: present
+    update_cache: true
+    cache_valid_time: 3600
+
+- name: Deploy the HAProxy configuration
+  ansible.builtin.template:
+    src: haproxy.cfg.j2
+    dest: /etc/haproxy/haproxy.cfg
+    mode: "0644"
+    validate: haproxy -c -f %s
+  notify: Reload HAProxy
+
+- name: Make sure HAProxy is running and enabled
+  ansible.builtin.service:
+    name: haproxy
+    state: started
+    enabled: true

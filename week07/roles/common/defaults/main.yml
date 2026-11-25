@@ -1,0 +1,11 @@
+---
+# Default values of the common role - the lowest precedence of all.
+# Override them in group_vars/ or host_vars/.
+timezone: UTC
+common_packages:
+  - htop
+  - curl
+extra_packages: []
+admins: []
+motd_owner: "the IT team"
+server_role: server

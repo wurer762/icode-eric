@@ -1,0 +1,3 @@
+{{ ansible_managed | comment }}
+{{ inventory_hostname }} ({{ ansible_default_ipv4.address | default('no IP') }}) - {{ server_role }}
+Managed by Ansible for {{ motd_owner }}. Manual changes will be overwritten.

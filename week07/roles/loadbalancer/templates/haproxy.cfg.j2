@@ -1,0 +1,32 @@
+# {{ ansible_managed }}
+global
+    log /dev/log local0
+    maxconn 2048
+    user haproxy
+    group haproxy
+    daemon
+
+defaults
+    log     global
+    mode    http
+    option  httplog
+    timeout connect 5s
+    timeout client  30s
+    timeout server  30s
+
+frontend web_front
+    bind *:{{ lb_port }}
+    default_backend web_back
+
+backend web_back
+    balance roundrobin
+{% for host in groups[lb_backend_group] %}
+    server {{ host }} {{ hostvars[host]['ansible_host'] }}:{{ hostvars[host]['web_port'] }} check
+{% endfor %}
+
+listen stats
+    bind *:{{ haproxy_stats_port }}
+    stats enable
+    stats uri /stats
+    stats refresh 10s
+    stats auth {{ haproxy_stats_user }}:{{ haproxy_stats_password }}

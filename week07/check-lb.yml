@@ -1,0 +1,23 @@
+---
+- name: Check the load balancer
+  hosts: managers
+  gather_facts: false
+
+  vars:
+    lb_host: "{{ groups['lb'][0] }}"
+    lb_url: "http://{{ hostvars[lb_host]['ansible_host'] }}:{{ hostvars[lb_host]['lb_port'] }}/"
+
+  tasks:
+    - name: Request the start page through the load balancer
+      ansible.builtin.uri:
+        url: "{{ lb_url }}"
+        return_content: true
+      register: answers
+      loop: "{{ range(1, 5) | list }}"
+
+    - name: Show which web server answered
+      ansible.builtin.debug:
+        msg: "Request {{ item.item }}: {{ item.content | regex_search('Hello from (\\S+)</h1>', '\\1') | first }}"
+      loop: "{{ answers.results }}"
+      loop_control:
+        label: "{{ item.item }}"
