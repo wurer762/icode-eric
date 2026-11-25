@@ -2,13 +2,15 @@
 
 ## Lab parameters
 
+> **Update (week 7):** the VMs got new addresses from DHCP, so all inventories (weeks 3–7) now use the IPs below. The command outputs in `adhoc.md` and in the answers further down were recorded in week 3 with the old addresses.
+
 | Parameter | Value |
 |---|---|
 | My student number NN | **TODO** |
 | Template VM ID (NN99) | **TODO** |
-| manager VM ID / IP | **TODO** / 10.0.97.16 |
+| manager VM ID / IP | **TODO** / 10.0.97.37 (week 3: 10.0.97.16) |
 | worker1 · worker2 · worker3 VM IDs | **TODO** |
-| worker1 · worker2 · worker3 IPs | 10.0.97.26 · 10.0.97.27 · 10.0.97.28 |
+| worker1 · worker2 · worker3 IPs | 10.0.97.38 · 10.0.97.43 · 10.0.97.42 (week 3: 10.0.97.26 · .27 · .28) |
 | Prefix length / gateway / DNS | /16 · 10.0.0.1 · 10.0.0.62, 10.0.0.1 |
 | Storage ID · bridge (Part 0) | **TODO** · **TODO** |
 
@@ -84,7 +86,7 @@ No, `hello.txt` should not be committed – it is just a temporary test file for
 | Proxmox host              |                       |             |
 |                  +-----------------+              |             |
 |                  |    manager      |              |             |
-|                  |   10.0.97.16    |              |             |
+|                  |   10.0.97.37    |              |             |
 |                  | Ansible control |              |             |
 |                  +-----------------+              |             |
 |                  /        |        \              |             |
@@ -93,7 +95,7 @@ No, `hello.txt` should not be committed – it is just a temporary test file for
 |               v           v           v           |             |
 |      +-----------+ +-----------+ +-----------+    |             |
 |      |  worker1  | |  worker2  | |  worker3  |    |             |
-|      |10.0.97.26 | |10.0.97.27 | |10.0.97.28 |    |             |
+|      |10.0.97.38 | |10.0.97.43 | |10.0.97.42 |    |             |
 |      +-----------+ +-----------+ +-----------+    |             |
 +------------------------------^--------------------|-------------+
                                |                    |

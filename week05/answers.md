@@ -16,6 +16,9 @@
 
 ## Part C
 **Q6.** worker3 got htop, curl, vim, git, qemu-guest-agent and haproxy. The list is `common_packages` (from `group_vars/all.yml`) + `extra_packages` (from `group_vars/lb.yml`, since worker3 is in `lb`). `default([])` avoids an error on hosts without `extra_packages`.
+
+**Q7.** **TODO**: answer missing. (The week 5 worksheet isn't in the repository, so I couldn't recover the question.)
+
 ## Part D
 **Q8.** The kernel task now reports `changed` on every run, so the recap shows `changed=1` per host even though nothing was modified. That is misleading: a second run should show `changed=0` (idempotence), and a read-only command never changes anything.
 
