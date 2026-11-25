@@ -1,6 +1,6 @@
 # Week 7 — Answers
 
-> **Note on the lab runs:** at the time of writing worker1 was unreachable (`No route to host`), and worker2 and worker3 presented **changed SSH host keys**. The live-run answers (Q5, Q6, Q7, Q8) are therefore the results I *expect* from the code and Ansible's rules. Each one is marked **(expected, to confirm on the lab)**. Everything else was checked on the manager: `--syntax-check`, `--list-tasks`, `--list-tags`, the collection install, the Galaxy role download and the `argument_specs` test.
+> **Lab note:** the workers got new IP addresses (worker1 10.0.97.38, worker2 10.0.97.43, worker3 10.0.97.42), so `inventory.ini` was updated. `carla.pub` did not exist anywhere, so I generated a lab keypair for carla. Only the public key is in `roles/common/files/`; the private key stays on the manager outside Git.
 
 ## Part A — The role skeleton
 
@@ -23,28 +23,34 @@
 
 **Q4.** worker1 gets **Europe/Luxembourg**. `group_vars/all.yml` has higher precedence than role defaults, which are the weakest variables of all. This is useful because the role always has a working value (`UTC`) when a project sets nothing, while any project can override it in `group_vars/`, `host_vars/` or with `-e` without editing the role. So the same role can be reused unchanged in different environments.
 
-**Q5.** (expected, to confirm on the lab) Only **"Write the message of the day"** reports `changed`, on all three workers. In week 5 `/etc/motd` was written with `copy` + `content:`. Now it comes from `motd.j2`, which adds an `Ansible managed` comment header and the new text "Manual changes will be overwritten.", so the file content differs. Packages, time zone, admins group and accounts, SSH keys, sudoers (same content as week 4) and `PermitRootLogin no` were already in place, so they report `ok`. Because the SSH task does not change, `Restart SSH` is not triggered.
+**Q5.** On all three workers `PLAY RECAP: ok=9 changed=3`:
+- **Write the message of the day.** `/etc/motd` was still the week 4 text ("This server is managed by Ansible."). The new `motd.j2` adds an `Ansible managed` comment header, host name, IP and server role, so the content differs.
+- **Manage admin accounts** and **Authorize SSH keys**, for item `carla` only. carla had never been created on these workers, because her `.pub` key was missing. alice and bob were already there, and dave was already absent.
+
+Packages, time zone, admins group, sudoers (same content as week 4) and `PermitRootLogin no` were already configured, so they reported `ok`. Because the SSH task did not change, `Restart SSH` did not run.
 
 ## Part C — Web server and load balancer roles
 
-**Q6.** (expected, to confirm on the lab) With `web_port` commented out in `group_vars/web.yml`:
+**Q6.** With `web_port` commented out in `group_vars/web.yml`:
 - In the **Web servers** play there is no change. worker1 and worker2 fall back to the role default `80`, and worker3 still has `8080` from `host_vars/worker3.yml`.
-- In the **Load balancer** play, worker3 **fails** while rendering `haproxy.cfg.j2`: `'dict object' has no attribute 'web_port'` (undefined variable). The template reads `hostvars[host]['web_port']` for worker1 and worker2. Role defaults are not inventory variables: they only exist while the *webserver* role is running and are not stored in `hostvars`. Inside the `loadbalancer` role there is no `web_port` for worker1 and worker2.
+- In the **Load balancer** play, worker3 **fails** on "Deploy the HAProxy configuration":
+  `AnsibleUndefinedVariable: 'ansible.vars.hostvars.HostVarsVars object' has no attribute 'web_port'` (recap worker3: `failed=1`). The template reads `hostvars[host]['web_port']` for worker1 and worker2. Role defaults are not inventory variables: they only exist while the *webserver* role is running and are not stored in `hostvars`. Inside the `loadbalancer` role there is no `web_port` for worker1 and worker2.
 
 So `web_port` must stay in `group_vars/web.yml`. It is data shared by two roles (nginx listens on it, and HAProxy connects to it), so it has to live in the inventory where every play can see it. I put the line back afterwards.
 
 ## Part D — One site.yml for everything
 
-**Q7.** (expected, to confirm on the lab) Second run of `ansible-playbook site.yml`:
+**Q7.** Second run of `ansible-playbook site.yml`:
 ```
-PLAY RECAP *****************************************************************
-worker1   : ok=17  changed=0  unreachable=0  failed=0  skipped=0  rescued=0  ignored=0
-worker2   : ok=17  changed=0  unreachable=0  failed=0  skipped=0  rescued=0  ignored=0
-worker3   : ok=21  changed=0  unreachable=0  failed=0  skipped=0  rescued=0  ignored=0
+PLAY RECAP *********************************************************************
+worker1                    : ok=18   changed=0    unreachable=0    failed=0    skipped=0    rescued=0    ignored=0
+worker2                    : ok=18   changed=0    unreachable=0    failed=0    skipped=0    rescued=0    ignored=0
+worker3                    : ok=22   changed=0    unreachable=0    failed=0    skipped=0    rescued=0    ignored=0
 ```
-(8 common tasks + 7 webserver tasks + 2 fact gatherings = 17 on the web servers. worker3 is also the lb, so it adds a third fact gathering and 3 loadbalancer tasks = 21.) **changed=0** everywhere: same servers, same result as week 6. Yes, `http://10.0.97.28` still alternates between the web servers on every reload (round robin over `groups[lb_backend_group]`, which is the same list as `groups['web']` before).
+(Web servers: 2 fact gatherings + 8 common tasks + 8 webserver tasks. The 8 include the argument-spec validation from the challenge. worker3 adds a third fact gathering and 3 loadbalancer tasks.) **changed=0** everywhere. On the first run only the start page changed, because carla is now listed as an admin.
+Yes, the load balancer still alternates. Six requests to `http://10.0.97.42/` gave worker1 → worker2 → worker3 → worker1 → worker2 → worker3. It rotates through **all three** members of the `web` group, because worker3 is also in `web` (nginx on port 8080).
 
-**Q8.** (expected, to confirm on the lab) **All** pages would change to `#2E9E6A`: worker1, worker3 *and* worker2, even though worker2 has its own `page_color` in `host_vars/worker2.yml` (and worker3 in `host_vars/worker3.yml`). Role `vars/` have a higher precedence than inventory `group_vars` and `host_vars`. Only `set_fact`, `include_vars`, task/block vars and `-e` beat them. So a value in a role's `vars/` folder can't be overridden per host. Use `vars/` only for internal constants the user should never change (e.g. package or service names per OS), and put anything configurable in `defaults/`. The file was deleted again.
+**Q8.** **All** pages would change to `#2E9E6A`. The `--check --diff` showed worker1 `#0094C3 → #2E9E6A`, worker2 `#2E8B57 → #2E9E6A` and worker3 `#F5A623 → #2E9E6A`. That includes worker2, even though worker2 has its own `page_color` in `host_vars/worker2.yml` (and worker3 in `host_vars/worker3.yml`). Role `vars/` have a higher precedence than inventory `group_vars` and `host_vars`. Only `set_fact`, `include_vars`, task/block vars and `-e` beat them. So a value in a role's `vars/` folder can't be overridden per host. Use `vars/` only for internal constants the user should never change (e.g. package or service names per OS), and put anything configurable in `defaults/`. Afterwards I reset the file to the empty skeleton from `role init`.
 
 ## Part E — Collections and Ansible Galaxy
 
