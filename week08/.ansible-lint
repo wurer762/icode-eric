@@ -1,0 +1,9 @@
+---
+# Lint the project against the strictest profile; it passes today.
+profile: production
+
+# web_port, lb_port and page_color are shared by several roles
+# through group_vars on purpose - a role prefix would hide that.
+# (The rule only exists from ansible-lint 6.18 on; the manager runs 6.17.2.)
+skip_list:
+  - var-naming[no-role-prefix]

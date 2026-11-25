@@ -1,0 +1,28 @@
+---
+- name: Baseline for all workers
+  tags: base
+  hosts: workers
+  become: true
+  roles:
+    - common
+
+- name: Web servers
+  tags: web
+  hosts: web
+  become: true
+  roles:
+    - webserver
+
+- name: Load balancer
+  tags: lb
+  hosts: lb
+  become: true
+  roles:
+    - loadbalancer
+
+- name: Database
+  hosts: db
+  become: true
+  tags: db
+  roles:
+    - database

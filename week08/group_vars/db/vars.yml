@@ -1,0 +1,4 @@
+---
+db_name: icode
+db_user: icode_app
+db_password: "{{ vault_db_password }}"

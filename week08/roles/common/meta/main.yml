@@ -1,0 +1,14 @@
+---
+galaxy_info:
+  role_name: common
+  author: Eric
+  description: "Baseline for all servers: packages, time zone, motd, admin users, sudo, SSH hardening"
+  company: ICODE class
+  license: MIT
+  min_ansible_version: "2.16"
+  platforms:
+    - name: Ubuntu
+      versions:
+        - all
+
+dependencies: []

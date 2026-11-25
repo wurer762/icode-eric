@@ -1,0 +1,14 @@
+---
+galaxy_info:
+  role_name: webserver
+  author: Eric
+  description: "nginx web server with the icode start page"
+  company: ICODE class
+  license: MIT
+  min_ansible_version: "2.16"
+  platforms:
+    - name: Ubuntu
+      versions:
+        - all
+
+dependencies: []

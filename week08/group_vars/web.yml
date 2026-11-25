@@ -1,0 +1,9 @@
+---
+server_role: web server
+extra_packages:
+  - nginx
+
+motd_owner: "the web team"
+
+web_port: 80
+page_color: "#0094C3"

@@ -1,0 +1,14 @@
+---
+galaxy_info:
+  role_name: loadbalancer
+  author: Eric
+  description: "HAProxy load balancer in front of the web servers"
+  company: ICODE class
+  license: MIT
+  min_ansible_version: "2.16"
+  platforms:
+    - name: Ubuntu
+      versions:
+        - all
+
+dependencies: []

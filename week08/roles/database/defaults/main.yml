@@ -1,0 +1,7 @@
+---
+# defaults file for database
+db_name: app
+db_user: app
+db_bind_address: 0.0.0.0
+# inventory group whose hosts may log in to the database
+db_client_group: web

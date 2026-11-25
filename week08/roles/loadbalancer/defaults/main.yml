@@ -1,0 +1,4 @@
+---
+# defaults file for loadbalancer
+lb_port: 80
+lb_backend_group: web
